@@ -1,26 +1,36 @@
-const { Kafka } = require('kafkajs');
+const {kafka} = require("./client");
+const readline = require("readline");
 
-// Define the Kafka broker
-const kafka = new Kafka({
-  clientId: 'my-kafka-app',
-  brokers: ['localhost:9092'], // Update with your Kafka broker address
-});
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
 
 // Create a producer
 const producer = kafka.producer();
 
 // Function to send messages
-async function sendMessage(topic, message) {
+async function sendMessage() {
   await producer.connect();
-  await producer.send({
-    topic: topic,
-    messages: [{ value: message }],
-  });
-  await producer.disconnect();
+  rl.setPrompt('> ');
+  rl.prompt();
+  rl.on('line',async function(line){
+    const [name , role] = line.split(' ');
+    await producer.send({
+      topic: 'new-topic',
+      messages: [{
+         partition:role.toLocaleLowerCase()==='dev'?0:1,
+         key:"loc-update",
+         value: JSON.stringify({name: name,  role: role}) 
+        }],
+    });
+  }).on("close",async()=>{
+    await producer.disconnect();
+  })
 }
 
 // Example usage
-sendMessage('my-topic', 'Hi iam kafkaJS').catch(console.error);
+sendMessage().catch(console.error);
 
 //  .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
 //  bin\windows\kafka-server-start.bat config\server.properties

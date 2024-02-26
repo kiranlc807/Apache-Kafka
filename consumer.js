@@ -1,24 +1,18 @@
-const { Kafka } = require('kafkajs');
-
-// Define the Kafka broker
-const kafka = new Kafka({
-  clientId: 'my-kafka-app',
-  brokers: ['localhost:9092'] // Update with your Kafka broker address
-});
+const {kafka} = require("./client");
 
 // Create a consumer
-const consumer = kafka.consumer({ groupId: 'my-group' });
+const consumer = kafka.consumer({ groupId: 'user-1' });
 
 // Function to consume messages
-async function consumeMessages(topic) {
+async function consumeMessages() {
   await consumer.connect();
-  await consumer.subscribe({ topic: topic ,fromBeginning: true});
+  await consumer.subscribe({ topic: 'new-topic' ,fromBeginning: true});
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
-      console.log(message.value.toString());
+      console.log(message.value.toString(),`Topic:${topic} Part:${partition}`);
     },
   });
 }
 
 // Example usage
-consumeMessages('my-topic').catch(console.error);
+consumeMessages().catch(console.error);
